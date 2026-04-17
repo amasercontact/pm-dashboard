@@ -264,3 +264,6 @@ Private use for Antonio and team.
 ---
 
 **Built with 🔒 security, 📱 mobile-first design, and 📅 calendar + 📎 file management!**
+-e 
+## Vercel Deployment
+Auto-deployed from GitHub
