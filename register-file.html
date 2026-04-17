@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register File - PM Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1e293b; color: #f3f4f6; padding: 40px; }
+        .container { max-width: 600px; margin: 0 auto; background: #374151; border-radius: 12px; padding: 30px; }
+        h1 { color: #60a5fa; margin-bottom: 20px; }
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        .info { color: #fbbf24; }
+        pre { background: #1e293b; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
+        button { background: #4f46e5; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button:hover { background: #4338ca; }
+        .btn-secondary { background: #6b7280; }
+        .btn-secondary:hover { background: #4b5563; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📎 Register CURRICULUM.pdf to Task</h1>
+        <p>This page registers the already-uploaded CURRICULUM.pdf to the "Week 3: Data Structures" task.</p>
+        
+        <div id="status"></div>
+        
+        <div id="actions" style="margin-top: 20px;">
+            <button onclick="registerFile()">Register File</button>
+            <button class="btn-secondary" onclick="goToDashboard()">Go to Dashboard</button>
+        </div>
+        
+        <div id="debug" style="margin-top: 20px;">
+            <h3>File Details:</h3>
+            <pre id="fileDetails"></pre>
+        </div>
+    </div>
+
+    <script>
+        // File details - already uploaded to Supabase Storage
+        const FILE_DATA = {
+            id: '8971b429-f89e-4958-9b66-fbf27a5fca1a',
+            project_id: '273b4434-9d89-460e-af60-4eaba4f13592',
+            task_id: '4cc197c9-be96-4cfb-92f2-d6d787f704c0',
+            name: 'CURRICULUM.pdf',
+            type: 'application/pdf',
+            size: 63160,
+            storagePath: 'project-files/273b4434-9d89-460e-af60-4eaba4f13592/tasks/4cc197c9-be96-4cfb-92f2-d6d787f704c0/8971b429-f89e-4958-9b66-fbf27a5fca1a/CURRICULUM.pdf',
+            publicUrl: 'https://jvndhvkwefokqqaoxfva.supabase.co/storage/v1/object/public/project-files/273b4434-9d89-460e-af60-4eaba4f13592/tasks/4cc197c9-be96-4cfb-92f2-d6d787f704c0/8971b429-f89e-4958-9b66-fbf27a5fca1a/CURRICULUM.pdf',
+            uploadedAt: new Date().toISOString(),
+            uploadSuccess: true
+        };
+
+        function setStatus(msg, type) {
+            document.getElementById('status').innerHTML = '<p class="' + type + '">' + msg + '</p>';
+        }
+
+        function showDebug() {
+            document.getElementById('fileDetails').textContent = JSON.stringify(FILE_DATA, null, 2);
+        }
+
+        function registerFile() {
+            try {
+                // Get current user
+                const currentUser = JSON.parse(localStorage.getItem('pm_current_user'));
+                if (!currentUser) {
+                    setStatus('❌ No user logged in. Please open the dashboard first and log in, then return to this page.', 'error');
+                    return;
+                }
+
+                // Get user's data
+                const userKey = 'pm_user_' + currentUser.email;
+                const userData = JSON.parse(localStorage.getItem(userKey));
+
+                if (!userData) {
+                    setStatus('❌ No user data found for ' + currentUser.email + '. Please use the dashboard first.', 'error');
+                    return;
+                }
+
+                // Initialize files array if needed
+                if (!userData.files) {
+                    userData.files = [];
+                }
+
+                // Check if file already exists
+                const existing = userData.files.find(f => f.id === FILE_DATA.id);
+                if (existing) {
+                    setStatus('ℹ️ File already registered. It should appear in the dashboard.', 'info');
+                    return;
+                }
+
+                // Add file
+                FILE_DATA.uploadedBy = currentUser.id;
+                userData.files.push(FILE_DATA);
+
+                // Save back
+                localStorage.setItem(userKey, JSON.stringify(userData));
+
+                setStatus('✅ File registered successfully! Click "Go to Dashboard" to see it attached to the task.', 'success');
+                document.getElementById('actions').innerHTML = '<button onclick="registerFile()">Re-register (already done)</button><button class="btn-secondary" onclick="goToDashboard()">Go to Dashboard</button>';
+
+            } catch (e) {
+                setStatus('❌ Error: ' + e.message, 'error');
+            }
+        }
+
+        function goToDashboard() {
+            window.location.href = '/';
+        }
+
+        // Show file details on load
+        showDebug();
+
+        // Auto-check status
+        window.onload = function() {
+            const currentUser = JSON.parse(localStorage.getItem('pm_current_user') || 'null');
+            if (currentUser) {
+                setStatus('👤 Logged in as: ' + currentUser.email + ' (' + currentUser.name + ')', 'info');
+            } else {
+                setStatus('⚠️ No user logged in. Please open the dashboard first, log in, then return to this page.', 'error');
+            }
+        };
+    </script>
+</body>
+</html>
